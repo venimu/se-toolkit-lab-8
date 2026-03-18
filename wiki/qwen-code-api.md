@@ -46,12 +46,15 @@ The `Qwen Code` API host port (without `<` and  `>`).
   
   `http://<lms-api-url>:<lms-api-host-port>/utils/qwen-code-api/v1`
   
-See:
+Replace the placeholders:
 
-- [`localhost`](./computer-networks.md#localhost)
 - [`<qwen-code-api-host-port>`](#qwen-code-api-host-port-placeholder)
 - [`<lms-api-host-port>`](./lms-api.md#lms-api-host-port-placeholder)
 - [`<lms-api-base-url>`](./lms-api.md#lms-api-base-url-placeholder)
+
+See:
+
+- [`localhost`](./computer-networks.md#localhost)
 
 ### `<qwen-code-api-base-url>` placeholder
 
