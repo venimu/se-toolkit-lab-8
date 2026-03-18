@@ -3,8 +3,10 @@
 
 # An example using multi-stage image builds to create a final image without uv.
 
-# First, build the application in the `/app` directory.
-# See `Dockerfile` for details.
+# ---
+# Stage 1: build the application in the `/app` directory.
+# ---
+
 # A portable solution: download image from Docker Hub.
 # FROM astral/uv:python3.14-bookworm-slim AS builder
 
@@ -35,8 +37,10 @@ COPY pyproject.toml uv.lock /app/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
+# ---
+# Stage 2: use a final image without uv
+# ---
 
-# Then, use a final image without uv
 # A portable solution: download image from Docker Hub.
 # FROM python:3.14.2-slim-bookworm
 
