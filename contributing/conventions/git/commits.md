@@ -58,6 +58,7 @@ area of change:
 - `docker` — root `docker-compose.yml` and root Docker config
 - `database` — `.sql` files, migrations, schema
 - `markdownlint` — `.markdownlint*` config
+- `scripts` — `scripts/`
 
 ## 4. Subject line
 
