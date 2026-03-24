@@ -65,7 +65,7 @@ The [username](#bot-username) of your bot.
    123456789:ABCdefGhIJKlmNoPQRsTUVwxyz
    ```
 
-6. Save this token — you will need it for the [bot environment file](./dotenv-bot-secret.md#bot_token).
+6. Save this token — you will need it for the [`BOT_TOKEN`](./dotenv-docker-secret.md#bot_token) variable.
 
 ## Deploy the bot on the VM
 
@@ -79,22 +79,22 @@ The [username](#bot-username) of your bot.
 
 ### Configure the environment (REMOTE)
 
-1. To open [`.env.docker.secret`](./dotenv-bot-secret.md#about-envbotsecret) for editing,
+1. To open [`.env.docker.secret`](./dotenv-docker-secret.md#what-is-envdockersecret) for editing,
 
    [run in the `VS Code Terminal`](./vs-code.md#run-a-command-in-the-vs-code-terminal):
 
    ```terminal
-   nano .env.bot.secret
+   nano .env.docker.secret
    ```
 
-2. [Set the variables in `.env.bot.secret`](./environments.md#set-the-variable-to-value-in-the-env-file-at-file-path):
+2. [Set the variables in `.env.docker.secret`](./environments.md#set-the-variable-to-value-in-the-env-file-at-file-path):
 
-   - [`BOT_TOKEN`](./dotenv-bot-secret.md#bot_token)
-   - [`LMS_API_BASE_URL`](./dotenv-bot-secret.md#LMS_API_BASE_URL)
-   - [`LMS_API_KEY`](./dotenv-bot-secret.md#lms_api_key)
-   - [`LLM_API_KEY`](./dotenv-bot-secret.md#llm_api_key)
-   - [`LLM_API_BASE_URL`](./dotenv-bot-secret.md#llm_api_base_url)
-   - [`LLM_API_MODEL`](./dotenv-bot-secret.md#llm_api_model)
+   - [`BOT_TOKEN`](./dotenv-docker-secret.md#bot_token)
+   - [`LMS_API_BASE_URL`](./dotenv-docker-secret.md#lms_api_base_url)
+   - [`LMS_API_KEY`](./dotenv-docker-secret.md#lms_api_key)
+   - [`LLM_API_KEY`](./dotenv-docker-secret.md#llm_api_key)
+   - [`LLM_API_BASE_URL`](./dotenv-docker-secret.md#llm_api_base_url)
+   - [`LLM_API_MODEL`](./dotenv-docker-secret.md#llm_api_model)
 
 3. Save and close the file.
 
@@ -112,10 +112,10 @@ The [username](#bot-username) of your bot.
    [run in the `VS Code Terminal`](./vs-code.md#run-a-command-in-the-vs-code-terminal):
 
    ```terminal
-   uv run --env-file .env.bot.secret python bot/bot.py
+   uv run --env-file .env.docker.secret python bot/bot.py
    ```
 
-   See [`.env.bot.secret`](./dotenv-bot-secret.md).
+   See [`.env.docker.secret`](./dotenv-docker-secret.md).
 
 #### Start the bot via `uv run poe`
 
@@ -127,7 +127,7 @@ The [username](#bot-username) of your bot.
    uv run poe bot
    ```
 
-   This loads the environment variables from [`.env.bot.secret`](./dotenv-bot-secret.md) automatically.
+   This loads the environment variables from [`.env.docker.secret`](./dotenv-docker-secret.md) automatically.
 
 #### Start the bot via `Docker Compose`
 
@@ -152,7 +152,7 @@ The [username](#bot-username) of your bot.
    [run in the `VS Code Terminal`](./vs-code.md#run-a-command-in-the-vs-code-terminal):
 
    ```terminal
-   uv run --env-file .env.bot.secret python bot/bot.py --test "/health"
+   uv run --env-file .env.docker.secret python bot/bot.py --test "/health"
    ```
 
    You should see a response from the bot.
@@ -167,7 +167,7 @@ The [username](#bot-username) of your bot.
    uv run poe bot-test "/health"
    ```
 
-   This loads the environment variables from [`.env.bot.secret`](./dotenv-bot-secret.md) automatically.
+   This loads the environment variables from [`.env.docker.secret`](./dotenv-docker-secret.md) automatically.
 
    You should see a response from the bot.
 
