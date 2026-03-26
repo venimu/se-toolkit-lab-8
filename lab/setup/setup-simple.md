@@ -202,11 +202,10 @@ Replace **`YOUR_VM_USERNAME`** and **`YOUR_VM_IP`** with your values.
 > If you see DNS errors like `getaddrinfo EAI_AGAIN registry.npmjs.org`, `Docker` can't resolve domain names. This is a university network DNS issue. Add Google DNS to `Docker`:
 >
 > ```terminal
-> sudo tee /etc/docker/daemon.json <<'EOF'
-> {
->   "dns": ["8.8.8.8", "8.8.4.4"]
-> }
-> EOF
+> echo '{"dns": ["8.8.8.8", "8.8.4.4", "1.1.1.1"]}' \
+>   | jq \
+>   | sudo tee /etc/docker/daemon.json
+>
 > sudo systemctl restart docker
 > ```
 >
@@ -315,11 +314,10 @@ The autochecker tests your bot against your **deployed backend on your VM**. You
 6. Configure Docker DNS (required on most university VMs):
 
    ```terminal
-   sudo tee /etc/docker/daemon.json <<'EOF'
-   {
-     "dns": ["8.8.8.8", "8.8.4.4"]
-   }
-   EOF
+   echo '{"dns": ["8.8.8.8", "8.8.4.4", "1.1.1.1"]}' \
+     | jq \
+     | sudo tee /etc/docker/daemon.json
+   
    sudo systemctl restart docker
    ```
 

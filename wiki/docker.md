@@ -215,7 +215,7 @@ Complete these steps:
    1. [Run in the `VS Code Terminal`](./vs-code.md#run-a-command-in-the-vs-code-terminal):
 
       ```terminal
-      echo '{"dns": ["8.8.8.8", "8.8.4.4"]}' \
+      echo '{"dns": ["8.8.8.8", "8.8.4.4", "1.1.1.1"]}' \
       | jq \
       | sudo tee /etc/docker/daemon.json
       ```
@@ -226,7 +226,8 @@ Complete these steps:
       {
         "dns": [
           "8.8.8.8",
-          "8.8.4.4"
+          "8.8.4.4",
+          "1.1.1.1"
         ]
       }
       ```

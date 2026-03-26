@@ -29,7 +29,7 @@ The port number is the value of [`GATEWAY_HOST_PORT`](./dotenv-docker-secret.md#
 
 ### `<gateway-host-port>` placeholder
 
-The [gateway host port](#gateway-host-port).
+The [gateway host port](#gateway-host-port) (without `<` and `>`).
 
 ## Gateway base URL
 
@@ -52,7 +52,7 @@ Replace the placeholders:
 
 ### `<gateway-base-url>` placeholder
 
-[Gateway base URL](#gateway-base-url) (without `<` and `>`).
+The [gateway base URL](#gateway-base-url) (without `<` and `>`).
 
 ## `Caddy`
 

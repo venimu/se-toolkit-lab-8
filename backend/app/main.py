@@ -1,20 +1,38 @@
 """Learning Management Service — FastAPI application."""
 
+import logging
+import time
 import traceback
+from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import RequestResponseEndpoint
+from starlette.responses import Response
 
 from app.auth import verify_api_key
 from app.routers import analytics, interactions, items, learners, pipeline
 from app.settings import settings
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # opentelemetry-instrument already installed the LoggingHandler on the root logger
+    # (via OTEL_LOGS_EXPORTER=otlp). We only need to fix uvicorn.access, which has
+    # propagate=False by default, so its HTTP access lines reach the OTel handler.
+    logging.getLogger("uvicorn.access").propagate = True
+    yield
+
 
 app = FastAPI(
     title=settings.app_name,
     debug=settings.debug,
     description="A learning management service API.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 
@@ -30,6 +48,30 @@ async def unhandled_exception_handler(exc: Exception):
             "traceback": tb[-3:],  # last 3 lines of traceback
         },
     )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next: RequestResponseEndpoint) -> Response:
+    logger.info(
+        "request_started",
+        extra={"event": "request_started", "method": request.method, "path": request.url.path},
+    )
+    t0 = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = round((time.perf_counter() - t0) * 1000)
+    level = logging.ERROR if response.status_code >= 500 else logging.INFO
+    logger.log(
+        level,
+        "request_completed",
+        extra={
+            "event": "request_completed",
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "duration_ms": duration_ms,
+        },
+    )
+    return response
 
 
 app.add_middleware(

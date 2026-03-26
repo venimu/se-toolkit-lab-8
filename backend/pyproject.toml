@@ -5,6 +5,13 @@ description = "LMS Backend API"
 requires-python = "==3.14.2"
 dependencies = [
   "asyncpg>=0.30.0",
+  "opentelemetry-distro[otlp]>=0.51b0",
+  "opentelemetry-exporter-otlp-proto-grpc>=1.30.0",
+  "opentelemetry-instrumentation-fastapi>=0.51b0",
+  "opentelemetry-instrumentation-sqlalchemy>=0.51b0",
+  "opentelemetry-instrumentation-httpx>=0.51b0",
+  "opentelemetry-instrumentation-asyncpg>=0.51b0",
+  "opentelemetry-instrumentation-logging>=0.51b0",
   "fastapi==0.128.7",
   "httpx==0.28.1",
   "pydantic==2.12.5",

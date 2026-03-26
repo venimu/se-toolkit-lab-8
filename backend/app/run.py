@@ -6,6 +6,7 @@ src_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(src_dir))
 
 
+
 def run_server():
     """Run the uvicorn server with configured settings."""
     import uvicorn

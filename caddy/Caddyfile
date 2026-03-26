@@ -26,6 +26,12 @@
     handle_path /utils/pgadmin* {
         reverse_proxy http://pgadmin:{$CONST_PGADMIN_CONTAINER_PORT}
     }
+    handle_path /utils/victorialogs* {
+        reverse_proxy http://victorialogs:{$CONST_VICTORIALOGS_CONTAINER_PORT}
+    }
+    handle_path /utils/victoriatraces* {
+        reverse_proxy http://victoriatraces:{$CONST_VICTORIATRACES_CONTAINER_PORT}
+    }
     handle /docs* {
         reverse_proxy http://backend:{$BACKEND_CONTAINER_PORT}
     }
