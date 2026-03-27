@@ -18,8 +18,7 @@ By the end of this lab, students should be able to:
 - [Apply] Set up an AI agent from scratch: create a project, install the framework, configure the LLM provider, wire it into Docker Compose, and connect it to an existing backend via MCP tools.
 - [Apply] Write MCP tools and skill prompts that give the agent structured access to services it couldn't use before.
 - [Analyze] Compare a bare agent (no tools) with an equipped agent (MCP tools + skills) and explain why structured tool access matters.
-- [Analyze] Use the agent to investigate a real bug by chaining log and trace queries in natural language.
-- [Create] Configure an agent with a skill prompt, a cron job, and a multi-step task that chains multiple tools to produce a periodic health report.
+- [Analyze/Create] Use the agent to investigate a real failure, diagnose a planted bug, and configure a scheduled health check through the built-in cron tool.
 
 In simple words:
 
@@ -27,8 +26,7 @@ In simple words:
 > 2. I set up nanobot from scratch — created the project, installed the framework, connected it to the Qwen API, wired it into Docker Compose, and talked to it.
 > 3. I saw what a bare agent does without tools (hallucinates) vs. with MCP tools (answers correctly) — and I understand why.
 > 4. I built MCP tools that let the agent query logs and traces, turning observability data into a conversational interface.
-> 5. I used the agent to find and fix a real bug without manually grepping logs.
-> 6. I configured a cron job so the agent proactively reports system health.
+> 5. I used the agent to investigate a failure, fix a planted bug, and configure it to report system health proactively.
 
 ## Lab story
 
@@ -45,8 +43,8 @@ A senior engineer explains the assignment:
 
 > 1. Add the nanobot agent to the system. Set it up from scratch — configure the LLM, connect it to the backend via MCP tools, and deploy it alongside the existing services.
 > 2. Once it works, give it new capabilities: wire it into the observability stack so anyone can ask about system health in plain language.
-> 3. Use the agent to investigate a real production issue — prove that this approach works for debugging, not just data queries.
-> 4. Make the agent proactive: configure a scheduled health check so it reports problems before users notice.
+> 3. Use the agent to investigate a real failure and prove that this approach works for debugging, not just data queries.
+> 4. Make the agent proactive: configure a scheduled health check in chat, then fix the bug and verify that the health check goes green again.
 
 ## Setup
 
@@ -62,13 +60,34 @@ The `setup-simple.md` adjustments for this lab:
 
 ### Task 1 — Set Up the Agent
 
-Students set up nanobot from scratch — same way they would in their own project (`uv init`, add dependency, write config, Dockerize, deploy). They experience bare agent vs equipped agent, then add a chat client.
+Students create a repo-local `nanobot/` project from scratch, install the framework at a pinned Git commit, run the onboard wizard, connect the agent to the LMS via MCP, and write the first LMS skill prompt.
 
-**Part A — Create nanobot and connect to Qwen API.** Students create `nanobot/` from scratch, write `config.json` (LLM provider only, no MCP), `entrypoint.py`, `Dockerfile`, add compose service + Caddy route. Bare agent answers general questions but hallucinates about the LMS.
+**Part A — Install nanobot and connect to Qwen API.** Students run `uv init nanobot`, `uv add "nanobot-ai @ git+..."`, and `nanobot onboard --config ./config.json --workspace ./workspace`. Bare agent answers general questions but hallucinates about the LMS.
 
-**Part B — Give the agent LMS tools.** Students register provided `mcp/mcp_lms/` in config, write skill prompt. Agent now returns real data. Students compare bare vs equipped responses.
+**Part B — Give the agent LMS tools.** Students install the provided `mcp/mcp_lms/` package into the repo-local project, register it in config, and pass backend env vars. Agent now returns real data.
 
-**Part C — Add a chat client.** Flutter client code is provided in the external `nanobot-websocket-channel` repo. Students add it as a submodule in Task 2, then wire it into compose + Caddy (add service, volume, route). Docker builds it (no Flutter SDK needed). Students chat via browser UI.
+**Part C — Write a skill prompt.** Students teach the agent how to use LMS tools well: ask for missing lab parameters, format results cleanly, and explain its current capabilities when the user asks.
+
+**Autochecker checks:**
+
+| Check | How |
+|---|---|
+| Bare agent CLI works | `cd nanobot && uv run nanobot agent -c ./config.json -m "What is the agentic loop?"` → reasonable answer |
+| Bare agent lacks LMS knowledge | `cd nanobot && uv run nanobot agent -c ./config.json -m "What labs are available in our LMS?"` → no real lab IDs |
+| Agent has LMS tools | `cd nanobot && NANOBOT_LMS_BACKEND_URL=http://localhost:42002 NANOBOT_LMS_API_KEY=... uv run nanobot agent -c ./config.json -m "What labs are available?"` → response contains real lab names (e.g., "lab-01") |
+| Agent answers quiz question | Same env vars, then ask `Describe the architecture of the LMS system` → mentions "backend", "PostgreSQL" |
+| Skill prompt handles ambiguity | Ask `Show me the scores` → agent asks which lab or lists available labs |
+| REPORT.md sections | `## Task 1A`, `## Task 1B`, `## Task 1C` exist with non-empty content |
+
+---
+
+### Task 2 — Deploy the Agent and Add a Web Client
+
+Students turn the repo-local agent into a Docker service, add the custom WebSocket channel, and serve the Flutter web client through Caddy.
+
+**Part A — Deploy nanobot as a gateway.** Students write `entrypoint.py` and `Dockerfile`, then uncomment and adapt the scaffolded `nanobot` service and `/ws/chat` route in `docker-compose.yml` and `caddy/Caddyfile`.
+
+**Part B — Add the WebSocket channel and Flutter client.** Students add the external `nanobot-websocket-channel` repo, install `nanobot-webchat`, enable the `webchat` channel in config, then uncomment and adapt the scaffolded Flutter service and `/flutter` route.
 
 **Autochecker checks:**
 
@@ -76,10 +95,8 @@ Students set up nanobot from scratch — same way they would in their own projec
 |---|---|
 | Nanobot service running | `docker compose ps --format json` → nanobot status "running" |
 | WebSocket responds | Send `{"content":"hello"}` via `websocat "ws://localhost:42002/ws/chat?access_key=..."` → JSON response |
-| Agent has LMS tools | Send `{"content":"what labs are available?"}` → response contains real lab names (e.g., "lab-01") |
-| Agent answers quiz question | Send `{"content":"Describe the architecture of the LMS system"}` → mentions "backend", "PostgreSQL" |
 | Flutter client serves | `curl -s -o /dev/null -w '%{http_code}' http://localhost:42002/flutter/` → 200 |
-| REPORT.md sections | `## Task 1A`, `## Task 1B`, `## Task 1C` exist with non-empty content |
+| REPORT.md sections | `## Task 2A`, `## Task 2B` exist with non-empty content |
 
 ---
 
@@ -106,32 +123,20 @@ Students learn to read existing observability data, then give the agent the same
 
 ---
 
-### Task 4 — Diagnose and Fix a Bug Using the Agent
+### Task 4 — Diagnose a Failure and Make the Agent Proactive
 
-Instructor deploys backend with a planted bug. Students use the agent to investigate: "show me recent errors" → "get that trace" → "what service failed?" Students fix the bug, redeploy, verify with agent.
-
-**Autochecker checks:**
-
-| Check | How |
-|---|---|
-| Bug is fixed | `curl` the broken endpoint → returns 200 (not 500) |
-| Investigation documented | `REPORT.md` has `## Task 4` with conversation transcript, root cause, fix |
-
----
-
-### Task 5 — Make the Agent Proactive
-
-**Part A — Multi-step skill.** Students enhance observability skill to chain log → trace queries autonomously. Agent produces coherent summary for "what went wrong?" in a single response.
-
-**Part B — Cron health check.** Students configure `nanobot/cron/jobs.json` with `agent_turn` entry. Agent checks health on schedule and delivers report to webchat channel.
+Students first strengthen the observability skill so **"What went wrong?"** triggers a single multi-step investigation. They then stop PostgreSQL to surface the planted failure path, ask the agent to schedule a short health check in the current web chat via the built-in `cron` tool, capture a proactive failure report, fix the backend bug, redeploy, reproduce the failure to verify the real root cause is now visible, and finally create a fresh short health check after redeploy to confirm healthy status.
 
 **Autochecker checks:**
 
 | Check | How |
 |---|---|
 | Multi-step skill works | Stop postgres, send `{"content":"what went wrong?"}` → response mentions both log AND trace data |
-| Cron config exists | `nanobot/cron/jobs.json` is valid JSON with `agent_turn` entry and `schedule` field |
-| REPORT.md sections | `## Task 5A`, `## Task 5B` exist with non-empty content |
+| Agent can schedule jobs | Ask agent to create a 2-minute health check, then ask `List scheduled jobs.` → response lists the new job |
+| Proactive failure report documented | `REPORT.md` has `## Task 4B` with screenshot or transcript of scheduled report |
+| Bug is fixed | After the code fix, repeating the failure no longer produces `unhandled_exception_handler() takes 1 positional argument but 2 were given` |
+| Recovery documented | `REPORT.md` has `## Task 4C` with fix plus healthy follow-up |
+| REPORT.md sections | `## Task 4A`, `## Task 4B`, `## Task 4C` exist with non-empty content |
 
 ---
 
@@ -182,15 +187,15 @@ Main branch = working LMS with no agent. Students create `nanobot/` from scratch
 
 **Provided:** backend, postgres, caddy, react, qwen-code-api (submodule + compose service), VictoriaLogs/Traces/OTel (in compose), `mcp/mcp_lms/` (provided tools, not wired), Flutter client (external repo, added as submodule in Task 2).
 
-**Created by students:** `nanobot/` directory (pyproject.toml, config.json, entrypoint.py, Dockerfile), compose services, Caddy routes, skill prompts, structured logging, observability MCP tools, bug fix, cron config, REPORT.md.
+**Created by students:** `nanobot/` directory (pyproject.toml, config.json, entrypoint.py, Dockerfile), uncommented and adapted Compose/Caddy glue, skill prompts, observability MCP tools, bug fix, scheduled health-check jobs via the `cron` tool, REPORT.md.
 
 #### Why students create `nanobot/` from scratch
 
-Real-world setup: `uv init && uv add "nanobot-ai @ git+https://github.com/HKUDS/nanobot.git@e7d371ec1e6531b28898ec2c869ef338e8dd46ec"`, write config, Dockerize. Not clone a pre-configured submodule. Students understand every file because they created it.
+Real-world setup: `uv init nanobot && cd nanobot && uv add "nanobot-ai @ git+https://github.com/HKUDS/nanobot.git@e7d371ec1e6531b28898ec2c869ef338e8dd46ec"`, then write config and Dockerize. Not clone a pre-configured submodule. Students understand every file because they created it.
 
 #### Why `mcp/mcp_lms/` is provided
 
-Domain-specific code — someone on the team already wrote the LMS tools. Lets Task 1 focus on agent setup, not re-implementing API wrappers from Lab 7. Students write their own MCP tools in Task 2 (observability).
+Domain-specific code — someone on the team already wrote the LMS tools. Lets Task 1 focus on agent setup, not re-implementing API wrappers from Lab 7. Students write their own MCP tools in Task 3 (observability).
 
 #### Why bare agent comes before tools
 

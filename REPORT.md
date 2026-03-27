@@ -34,17 +34,17 @@ Paste your checkpoint evidence below. Add screenshots as image files in the repo
 
 <!-- Paste agent responses to "any errors in the last hour?" under normal and failure conditions -->
 
-## Task 4 — Bug investigation
+## Task 4A — Multi-step investigation
 
-<!-- 1. Questions you asked the agent (conversation transcript)
-     2. Root cause identified
-     3. Code fix (diff or description)
-     4. Agent response after fix confirming no errors -->
+<!-- Paste the agent's response to "What went wrong?" showing chained log + trace investigation -->
 
-## Task 5A — Multi-step investigation
+## Task 4B — Proactive health check
 
-<!-- Paste the agent's response to "what went wrong?" showing chained log+trace queries -->
+<!-- Screenshot or transcript of the proactive health report that appears in the Flutter chat -->
 
-## Task 5B — Cron health check
+## Task 4C — Bug fix and recovery
 
-<!-- Screenshot of the health report in the Flutter app -->
+<!-- 1. Root cause identified
+     2. Code fix (diff or description)
+     3. Post-fix response to "What went wrong?" showing the real underlying failure
+     4. Healthy follow-up report or transcript after recovery -->

@@ -9,7 +9,7 @@
 > Set it up from scratch. Wire it into the system. Then extend it with observability tools so it can answer questions about system health too.
 
 > [!IMPORTANT]
-> Do this lab on your VM, ideally through `VS Code` Remote-SSH. Do not install or run `nanobot` on your main machine.
+> Do this lab on your VM. SSH into it directly or through `VS Code` Remote-SSH. Do not install or run `nanobot` on your main machine.
 
 ## What you will learn
 
@@ -20,8 +20,7 @@ By the end of this lab, you should be able to say:
 > 2. I set up nanobot from scratch — created the project, installed the framework, connected it to the Qwen API, wired it into Docker Compose, and talked to it.
 > 3. I saw what a bare agent does without tools (hallucinates) vs. with MCP tools (answers correctly) — and I understand why.
 > 4. I built MCP tools that let the agent query logs and traces, turning observability data into a conversational interface.
-> 5. I used the agent to find and fix a real bug without manually grepping logs.
-> 6. I configured a cron job so the agent proactively reports system health.
+> 5. I used the agent to investigate a failure, fix a planted bug, and configure it to report system health proactively.
 
 ## Architecture
 
@@ -69,8 +68,7 @@ This is different from Lab 7. There, you built one client around your own LLM lo
 1. [Set Up the Agent](./lab/tasks/required/task-1.md) — install nanobot, configure Qwen API, add MCP tools, write skill prompt
 2. [Deploy and Connect a Web Client](./lab/tasks/required/task-2.md) — Dockerize nanobot, add WebSocket channel + Flutter chat UI
 3. [Give the Agent New Eyes](./lab/tasks/required/task-3.md) — explore observability data, write log/trace MCP tools
-4. [Diagnose and Fix a Bug](./lab/tasks/required/task-4.md) — use the agent to investigate a real production issue
-5. [Make the Agent Proactive](./lab/tasks/required/task-5.md) — multi-step skills, cron health checks
+4. [Diagnose a Failure and Make the Agent Proactive](./lab/tasks/required/task-4.md) — one-shot investigation, in-chat cron health checks, fix the bug
 
 ### Optional
 
