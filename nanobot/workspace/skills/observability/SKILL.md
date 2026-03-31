@@ -33,6 +33,19 @@ Run a one-shot investigation that chains log and trace tools:
    - What the trace shows (span hierarchy, where it failed)
    - The root cause (e.g., "PostgreSQL connection refused", "SQLAlchemy timeout")
 
+**Important**: When investigating the LMS backend failure, pay attention to this discrepancy:
+- Logs and traces will show a real PostgreSQL/SQLAlchemy error (connection refused, database down)
+- The HTTP response may incorrectly report `404 Items not found`
+- The real issue is the database being unavailable, not items missing
+- Always report the **root cause from logs/traces**, not the misleading HTTP status
+
+### When the user asks about errors or system health (general)
+
+1. **Start with `logs_error_count`** to quickly see if there are recent errors and which services are affected
+2. If errors are found, use **`logs_search`** to inspect the relevant service and extract details
+3. If you find a `trace_id` in the logs, use **`traces_get`** to inspect the full request path
+4. Summarize findings concisely — don't dump raw JSON
+
 ### When the user asks about errors or system health (general)
 
 1. **Start with `logs_error_count`** to quickly see if there are recent errors and which services are affected
