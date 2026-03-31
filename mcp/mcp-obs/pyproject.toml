@@ -1,0 +1,37 @@
+[project]
+name = "mcp-obs"
+version = "0.1.0"
+description = "MCP server for observability tools (VictoriaLogs and VictoriaTraces)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "httpx>=0.28.0",
+  "mcp>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_obs"]
+
+[tool.poe.tasks]
+dev = { cmd = "python -m mcp_obs" }
+
+[tool.pyright]
+extraPaths = ["src"]
+exclude = ["**/__pycache__", "**/.*", ".venv", ".direnv"]
+typeCheckingMode = "strict"
+reportAssignmentType = "none"
+reportIncompatibleVariableOverride = "none"
+reportUnknownMemberType = "none"
+reportMissingTypeStubs = "none"
+
+[tool.ruff]
+exclude = []
+
+[tool.ty.src]
+include = ["."]
+
+[tool.ty.rules]
