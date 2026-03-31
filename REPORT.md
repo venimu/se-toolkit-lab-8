@@ -114,15 +114,131 @@ The skill prompt successfully taught the agent to:
 
 ## Task 4A — Multi-step investigation
 
-<!-- Paste the agent's response to "What went wrong?" showing chained log + trace investigation -->
+**Observability Skill Enhancement:**
+
+The observability skill was enhanced to guide the agent through a one-shot investigation when the user asks "What went wrong?" or "Check system health":
+
+1. Call `logs_error_count` with `time_range: "10m"` to find recent errors
+2. Call `logs_search` scoped to the LMS backend
+3. Extract a `trace_id` from error logs
+4. Call `traces_get` with that trace ID to inspect the full request path
+5. Summarize findings concisely, mentioning both log evidence and trace evidence
+
+**Key insight for the planted bug:**
+- Logs and traces show a real PostgreSQL/SQLAlchemy error (connection refused, database down)
+- The HTTP response incorrectly reports `404 Items not found`
+- The real issue is the database being unavailable, not items missing
+
+**Test scenario:** PostgreSQL was stopped to trigger the failure, then a request to list labs/items was made through the Flutter app.
+
+---
 
 ## Task 4B — Proactive health check
 
-<!-- Screenshot or transcript of the proactive health report that appears in the Flutter chat -->
+**Scheduled Health Check Configuration:**
+
+The agent uses the built-in `cron` tool to create recurring health checks. The health check:
+- Runs every 2 minutes
+- Checks for LMS/backend errors in the last 2 minutes using `logs_error_count`
+- Inspects traces if errors are found
+- Posts a short summary to the chat
+- Reports "system looks healthy" if no recent errors are found
+
+**Usage:**
+- Create: "Create a health check for this chat that runs every 2 minutes using your cron tool..."
+- List: "List scheduled jobs."
+- Remove: "Remove the health check job."
+
+---
 
 ## Task 4C — Bug fix and recovery
 
-<!-- 1. Root cause identified
-     2. Code fix (diff or description)
-     3. Post-fix response to "What went wrong?" showing the real underlying failure
-     4. Healthy follow-up report or transcript after recovery -->
+### 1. Root Cause
+
+**Location:** `backend/src/lms_backend/routers/items.py`, function `get_items()`
+
+**The planted bug:** A broad `except Exception` block caught all exceptions (including database connection errors) and re-raised them as `HTTPException` with status code `404 NOT_FOUND` and detail "Items not found".
+
+```python
+# BEFORE (buggy code):
+@router.get("/", response_model=list[ItemRecord])
+async def get_items(session: AsyncSession = Depends(get_session)):
+    try:
+        return await read_items(session)
+    except Exception as exc:
+        logger.warning("items_list_failed_as_not_found", ...)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Items not found",
+        ) from exc
+```
+
+This masked the real database failure (PostgreSQL connection refused) and reported it as a 404, misleading both users and observability tools.
+
+### 2. Fix Applied
+
+**File:** `backend/src/lms_backend/routers/items.py`
+
+**Changes:**
+1. Import `SQLAlchemyError` to catch database-specific exceptions
+2. Add specific exception handler for `SQLAlchemyError` that returns `503 SERVICE_UNAVAILABLE`
+3. Keep generic `Exception` handler for unexpected errors, returning `500 INTERNAL_SERVER_ERROR`
+4. Both handlers now log the actual error message and type for proper observability
+
+```python
+# AFTER (fixed code):
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+@router.get("/", response_model=list[ItemRecord])
+async def get_items(session: AsyncSession = Depends(get_session)):
+    """Get all items."""
+    try:
+        return await read_items(session)
+    except SQLAlchemyError as exc:
+        logger.error(
+            "items_list_database_error",
+            extra={
+                "event": "items_list_database_error",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database unavailable: {str(exc)}",
+        ) from exc
+    except Exception as exc:
+        logger.error(
+            "items_list_unexpected_error",
+            extra={
+                "event": "items_list_unexpected_error",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(exc)}",
+        ) from exc
+```
+
+### 3. Post-Fix Verification
+
+After rebuilding and redeploying the backend:
+- With PostgreSQL stopped, requests to `/items/` now return `503 SERVICE_UNAVAILABLE` with the actual database error message
+- Logs show `items_list_database_error` with the real exception details
+- Traces correctly show the database connection failure
+- The agent's "What went wrong?" investigation now reports the true root cause
+
+### 4. Recovery
+
+PostgreSQL was restarted:
+```bash
+docker compose --env-file .env.docker.secret start postgres
+```
+
+After recovery:
+- Backend health check returns healthy
+- Requests to `/items/` succeed and return the item list
+- Scheduled health checks report "system looks healthy"
+- No recent backend errors detected in the last 2-minute window
